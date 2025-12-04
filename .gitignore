@@ -1,0 +1,10 @@
+# Ignore dependencies in the dapp workspace
+dapp/node_modules/
+# Dapp workspace
+dapp/node_modules/
+dapp/dist/
+
+# Move/contract artifacts
+contract/build/
+contract/.trace
+contract/.coverage*
