@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.packageManager": "pnpm",
+  "eslint.workingDirectories": ["./dapp"],
+  "eslint.experimental.useFlatConfig": true
+}
