@@ -1,10 +1,27 @@
-# Ignore dependencies in the dapp workspace
-dapp/node_modules/
 # Dapp workspace
 dapp/node_modules/
+dapp/.pnp
+dapp/.pnp.js
+dapp/.next/
+dapp/out/
+dapp/build/
 dapp/dist/
+dapp/.DS_Store
+dapp/*.pem
+dapp/npm-debug.log*
+dapp/yarn-debug.log*
+dapp/yarn-error.log*
+dapp/.env*.local
+dapp/.env
+dapp/.vercel
+dapp/*.tsbuildinfo
+dapp/next-env.d.ts
+dapp/.claude/
 
 # Move/contract artifacts
 contract/build/
 contract/.trace
 contract/.coverage*
+
+# Windows Zone.Identifier files
+*:Zone.Identifier
