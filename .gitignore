@@ -23,5 +23,16 @@ contract/build/
 contract/.trace
 contract/.coverage*
 
+# Indexer workspace
+indexer/test-indexer/node_modules/
+indexer/test-indexer/.env
+indexer/test-indexer/.env*.local
+indexer/test-indexer/.env.production
+indexer/test-indexer/.claude/
+indexer/test-indexer/*.log
+indexer/test-indexer/dist/
+indexer/test-indexer/build/
+indexer/test-indexer/*.tsbuildinfo
+
 # Windows Zone.Identifier files
 *:Zone.Identifier
