@@ -1,0 +1,30 @@
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+
+model ConfigKey {
+  dbId String @id @unique @default(uuid())
+  per_type_index String
+  per_type_key Int[]
+}
+
+model PerTypeConfigCreated {
+  dbId String @id @unique @default(uuid())
+  key Json
+  config_id String
+}
+
+
+model cursor {
+  id        String @id
+  eventSeq  String
+  txDigest  String
+}
