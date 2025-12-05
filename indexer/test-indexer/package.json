@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "main": "server.ts",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "db:setup:dev": "npx prisma migrate dev --name init --schema=./prisma/schema.prisma",
     "db:reset:dev": "npx prisma migrate reset --schema=./prisma/schema.prisma",
