@@ -3,6 +3,8 @@
 A blockchain indexer for the Sui Task Management dApp that maintains both event history and current state.
 
 > **👥 New Team Member?** See [SETUP.md](./SETUP.md) for detailed setup instructions.
+>
+> **🚀 Deploy to Production?** See [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) for step-by-step deployment.
 
 ## Features
 
