@@ -144,7 +144,7 @@ export function CreateTicketModal({
         <Select
           label="Priority"
           value={priority}
-          onChange={(e) => setPriority(e.target.value as TicketPriority)}
+          onValueChange={(value) => setPriority(value as TicketPriority)}
           options={priorityOptions}
           disabled={loading}
         />
@@ -152,7 +152,7 @@ export function CreateTicketModal({
         <Select
           label="Assignee"
           value={assigneeId}
-          onChange={(e) => setAssigneeId(e.target.value)}
+          onValueChange={(value) => setAssigneeId(value)}
           options={assigneeOptions}
           disabled={loading}
         />

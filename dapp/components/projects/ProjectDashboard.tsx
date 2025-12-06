@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Card, Flex, Grid, Heading, Text, Badge } from '@radix-ui/themes';
 import { Project, ProjectStats } from '@/types/project';
 import { ProjectMember } from '@/types/user';
 import { MembersList } from './MembersList';
@@ -32,83 +33,32 @@ export function ProjectDashboard({
   onCreateTicket,
 }: ProjectDashboardProps) {
   return (
-    <div className="space-y-6">
-      {/* Project header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {project.name}
-            </h1>
-            <p className="text-gray-600">{project.description}</p>
-          </div>
+    <Flex direction="column" gap="5">
+      <Card variant="surface" size="3">
+        <Flex align="start" justify="between" mb="3" gap="4">
+          <Flex direction="column" gap="2">
+            <Heading size="6">{project.name}</Heading>
+            <Text color="gray">{project.description}</Text>
+          </Flex>
 
-          <Link href={`/projects/${project.id}/board`}>
-            <Button>
-              View Board
-            </Button>
-          </Link>
-        </div>
-      </div>
+          <Button asChild>
+            <Link href={`/projects/${project.id}/board`}>View Board</Link>
+          </Button>
+        </Flex>
+      </Card>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Total Tickets</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalTickets}</p>
-            </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-        </div>
+      <Grid columns={{ initial: '1', md: '4' }} gap="4">
+        <StatCard
+          label="Total Tickets"
+          value={stats.totalTickets}
+          accent="indigo"
+          helper="Across all statuses"
+        />
+        <StatCard label="To Do" value={stats.todoCount} accent="gray" helper="Backlog" />
+        <StatCard label="In Progress" value={stats.inProgressCount} accent="yellow" helper="Being worked" />
+        <StatCard label="Done" value={stats.doneCount} accent="green" helper="Completed" />
+      </Grid>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">To Do</p>
-              <p className="text-3xl font-bold text-gray-600">{stats.todoCount}</p>
-            </div>
-            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-gray-400 rounded" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-yellow-600">{stats.inProgressCount}</p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Done</p>
-              <p className="text-3xl font-bold text-green-600">{stats.doneCount}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Members section */}
       <MembersList
         members={members}
         canAddMembers={canAddMembers}
@@ -116,20 +66,47 @@ export function ProjectDashboard({
         onAddMember={onAddMember}
       />
 
-      {/* Quick actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="flex space-x-3">
-          <Button onClick={onCreateTicket}>
-            Create Ticket
+      <Card variant="surface" size="3">
+        <Heading size="4" mb="3">
+          Quick Actions
+        </Heading>
+        <Flex gap="3" wrap="wrap">
+          <Button onClick={onCreateTicket}>Create Ticket</Button>
+          <Button variant="secondary" asChild>
+            <Link href={`/projects/${project.id}/board`}>View Kanban Board</Link>
           </Button>
-          <Link href={`/projects/${project.id}/board`}>
-            <Button variant="secondary">
-              View Kanban Board
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Card>
+    </Flex>
+  );
+}
+
+interface StatCardProps {
+  label: string;
+  value: number;
+  accent: 'indigo' | 'gray' | 'yellow' | 'green';
+  helper?: string;
+}
+
+function StatCard({ label, value, accent, helper }: StatCardProps) {
+  return (
+    <Card variant="surface" size="3">
+      <Flex align="center" justify="between">
+        <Flex direction="column" gap="1">
+          <Text color="gray" size="2">
+            {label}
+          </Text>
+          <Heading size="6">{value}</Heading>
+          {helper && (
+            <Text color="gray" size="1">
+              {helper}
+            </Text>
+          )}
+        </Flex>
+        <Badge color={accent} variant="soft">
+          {label}
+        </Badge>
+      </Flex>
+    </Card>
   );
 }

@@ -6,9 +6,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Avatar, Badge, Box, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import { ProjectMember, MemberRole } from '@/types/user';
 import { formatAddress } from '@/lib/utils/formatting';
 import { Button } from '@/components/ui/Button';
+import { getRoleCapabilities } from '@/lib/utils/permissions';
 
 interface MembersListProps {
   members: ProjectMember[];
@@ -23,11 +25,11 @@ export function MembersList({ members, canAddMembers, onAddMember, currentUserAd
   const getRoleBadgeColor = (role: MemberRole) => {
     switch (role) {
       case MemberRole.ADMIN:
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'plum';
       case MemberRole.MEMBER:
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'indigo';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'gray';
     }
   };
 
@@ -43,101 +45,94 @@ export function MembersList({ members, canAddMembers, onAddMember, currentUserAd
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+    <Card variant="surface" size="3">
+      <Flex align="center" justify="between" mb="4">
+        <Heading size="5">Team Members</Heading>
         {canAddMembers && onAddMember && (
           <Button size="sm" onClick={onAddMember}>
             Add Member
           </Button>
         )}
-      </div>
+      </Flex>
 
-      {/* Members list */}
-      <div className="divide-y divide-gray-200">
+      <Flex direction="column" gap="3">
         {members.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <Text color="gray" align="center">
             No members found
-          </div>
+          </Text>
         ) : (
           members.map((member) => {
             const isCurrentUser = currentUserAddress && member.user.address === currentUserAddress;
-            const { getRoleCapabilities } = require('@/lib/utils/permissions');
             const capabilities = getRoleCapabilities(member.role);
 
             return (
-              <div
+              <Card
                 key={member.id}
-                className={`p-4 hover:bg-gray-50 transition-colors ${
-                  isCurrentUser ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                }`}
+                variant={isCurrentUser ? 'classic' : 'surface'}
+                size="2"
+                className="transition-shadow"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {/* Avatar placeholder */}
-                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center relative">
-                      <span className="text-primary-700 font-medium text-sm">
-                        {member.user.username?.[0]?.toUpperCase() || '?'}
-                      </span>
-                      {isCurrentUser && (
-                        <div className="absolute -top-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white" />
-                      )}
-                    </div>
-
-                    {/* Member info */}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">
+                <Flex align="center" justify="between" gap="3">
+                  <Flex align="center" gap="3">
+                    <Avatar
+                      fallback={member.user.username?.[0]?.toUpperCase() || '?'}
+                      color="indigo"
+                      size="3"
+                    />
+                    <Flex direction="column" gap="1">
+                      <Flex align="center" gap="2">
+                        <Text weight="medium">
                           {member.user.username || formatAddress(member.user.address)}
-                        </p>
+                        </Text>
                         {isCurrentUser && (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          <Badge color="green" variant="soft">
                             You
-                          </span>
+                          </Badge>
                         )}
-                      </div>
-                      <p className="text-sm text-gray-500 font-mono">
+                      </Flex>
+                      <Text color="gray" size="1" style={{ fontFamily: 'monospace' }}>
                         {formatAddress(member.user.address)}
-                      </p>
-                    </div>
-                  </div>
+                      </Text>
+                    </Flex>
+                  </Flex>
 
-                  {/* Role badge with capabilities */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowCapabilities(showCapabilities === member.id ? null : member.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 hover:shadow-md transition-shadow ${getRoleBadgeColor(
-                        member.role
-                      )}`}
-                    >
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowCapabilities(showCapabilities === member.id ? null : member.id)}
+                  >
+                    <Flex align="center" gap="2">
                       <span>{getRoleIcon(member.role)}</span>
-                      <span>{member.role}</span>
-                      <span className="text-xs opacity-60">ⓘ</span>
-                    </button>
-                  </div>
-                </div>
+                      <Badge color={getRoleBadgeColor(member.role)} variant="soft">
+                        {member.role}
+                      </Badge>
+                    </Flex>
+                  </Button>
+                </Flex>
 
-                {/* Capabilities dropdown */}
                 {showCapabilities === member.id && (
-                  <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm animate-fade-in">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">
+                  <Box
+                    mt="3"
+                    p="3"
+                    style={{ border: '1px solid var(--gray-a4)', borderRadius: 10 }}
+                  >
+                    <Text size="1" weight="bold" color="gray">
                       {member.role} Capabilities:
-                    </p>
-                    <ul className="text-xs text-gray-600 space-y-1">
+                    </Text>
+                    <Flex direction="column" gap="1" mt="2">
                       {capabilities.map((cap: string, idx: number) => (
-                        <li key={idx} className={cap.startsWith('✗') ? 'text-gray-400' : ''}>
+                        <Text key={idx} size="1" color={cap.startsWith('✗') ? 'gray' : undefined}>
                           {cap}
-                        </li>
+                        </Text>
                       ))}
-                    </ul>
-                  </div>
+                    </Flex>
+                  </Box>
                 )}
-              </div>
+              </Card>
             );
           })
         )}
-      </div>
-    </div>
+      </Flex>
+    </Card>
   );
 }

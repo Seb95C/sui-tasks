@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { useDrag } from 'react-dnd';
+import { Card, Flex, Badge, Heading, Text, Avatar } from '@radix-ui/themes';
 import { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
 import { formatAddress } from '@/lib/utils/formatting';
 
@@ -34,65 +35,60 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
   const getPriorityColor = (priority: TicketPriority) => {
     switch (priority) {
       case TicketPriority.URGENT:
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'red';
       case TicketPriority.HIGH:
-        return 'bg-orange-100 text-orange-700 border-orange-200';
+        return 'orange';
       case TicketPriority.MEDIUM:
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'yellow';
       case TicketPriority.LOW:
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'green';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'gray';
     }
   };
 
   return (
-    <div
+    <Card
       ref={drag as any}
       onClick={onClick}
-      className={`bg-white rounded-lg border-2 border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow ${
-        isDragging ? 'opacity-50' : 'opacity-100'
-      }`}
+      variant="surface"
+      size="2"
+      style={{
+        cursor: 'pointer',
+        opacity: isDragging ? 0.5 : 1,
+      }}
     >
-      {/* Priority badge */}
-      <div className="flex items-center justify-between mb-2">
-        <span
-          className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(
-            ticket.priority
-          )}`}
-        >
-          {ticket.priority}
-        </span>
+      <Flex direction="column" gap="2">
+        <Flex align="center" justify="between">
+          <Badge color={getPriorityColor(ticket.priority)} variant="soft">
+            {ticket.priority}
+          </Badge>
+          <Text size="1" color="gray" style={{ fontFamily: 'monospace' }}>
+            #{ticket.id.slice(0, 8)}
+          </Text>
+        </Flex>
 
-        {/* Ticket ID */}
-        <span className="text-xs text-gray-400 font-mono">
-          #{ticket.id.slice(0, 8)}
-        </span>
-      </div>
+        <Heading size="4" className="line-clamp-2">
+          {ticket.title}
+        </Heading>
 
-      {/* Title */}
-      <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-        {ticket.title}
-      </h4>
+        <Text size="2" color="gray" className="line-clamp-2">
+          {ticket.description}
+        </Text>
 
-      {/* Description preview */}
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-        {ticket.description}
-      </p>
-
-      {/* Footer with assignee */}
-      {ticket.assignee && (
-        <div className="flex items-center text-xs text-gray-500">
-          <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center mr-2">
-            <span className="text-primary-700 font-medium text-xs">
-              {ticket.assignee.username?.[0]?.toUpperCase() || '?'}
-            </span>
-          </div>
-          <span>
-            {ticket.assignee.username || formatAddress(ticket.assignee.address)}
-          </span>
-        </div>
-      )}
-    </div>
+        {ticket.assignee && (
+          <Flex align="center" gap="2" mt="1">
+            <Avatar
+              fallback={ticket.assignee.username?.[0]?.toUpperCase() || '?'}
+              color="indigo"
+              size="2"
+            />
+            <Text size="2">
+              {ticket.assignee.username || formatAddress(ticket.assignee.address)}
+            </Text>
+          </Flex>
+        )}
+      </Flex>
+    </Card>
   );
 }

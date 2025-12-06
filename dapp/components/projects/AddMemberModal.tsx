@@ -116,7 +116,7 @@ export function AddMemberModal({
         <Select
           label="Role"
           value={role}
-          onChange={(e) => setRole(e.target.value as MemberRole)}
+          onValueChange={(value) => setRole(value as MemberRole)}
           options={roleOptions}
           disabled={loading}
         />

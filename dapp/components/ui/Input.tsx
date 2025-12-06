@@ -6,7 +6,7 @@
 'use client';
 
 import React, { InputHTMLAttributes } from 'react';
-import clsx from 'clsx';
+import { Flex, Text, TextField, TextArea as RadixTextArea } from '@radix-ui/themes';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -18,44 +18,33 @@ export function Input({
   label,
   error,
   helperText,
-  className,
   id,
   ...props
 }: InputProps) {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
 
   return (
-    <div className="w-full">
+    <Flex direction="column" gap="1" className="w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <Text as="label" htmlFor={inputId} size="2" weight="medium" color="gray">
           {label}
-        </label>
+        </Text>
       )}
 
-      <input
-        id={inputId}
-        className={clsx(
-          'w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors',
-          error
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300',
-          props.disabled && 'bg-gray-100 cursor-not-allowed',
-          className
-        )}
-        {...props}
-      />
+      <TextField.Root color={error ? 'red' : undefined} size="2" radius="large" variant="surface">
+        <TextField.Input id={inputId} {...props} />
+      </TextField.Root>
 
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
-    </div>
+      {error ? (
+        <Text size="1" color="red">
+          {error}
+        </Text>
+      ) : helperText ? (
+        <Text size="1" color="gray">
+          {helperText}
+        </Text>
+      ) : null}
+    </Flex>
   );
 }
 
@@ -73,7 +62,6 @@ export function Textarea({
   label,
   error,
   helperText,
-  className,
   id,
   rows = 4,
   ...props
@@ -81,37 +69,31 @@ export function Textarea({
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
 
   return (
-    <div className="w-full">
+    <Flex direction="column" gap="1" className="w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <Text as="label" htmlFor={inputId} size="2" weight="medium" color="gray">
           {label}
-        </label>
+        </Text>
       )}
 
-      <textarea
+      <RadixTextArea
         id={inputId}
         rows={rows}
-        className={clsx(
-          'w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors resize-y',
-          error
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300',
-          props.disabled && 'bg-gray-100 cursor-not-allowed',
-          className
-        )}
+        variant="surface"
+        color={error ? 'red' : undefined}
+        radius="large"
         {...props}
       />
 
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
-    </div>
+      {error ? (
+        <Text size="1" color="red">
+          {error}
+        </Text>
+      ) : helperText ? (
+        <Text size="1" color="gray">
+          {helperText}
+        </Text>
+      ) : null}
+    </Flex>
   );
 }

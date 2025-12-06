@@ -1,109 +1,66 @@
 /**
  * Modal Component
- * Reusable modal dialog with overlay
+ * Radix Dialog wrapper for consistent theming
  */
 
-'use client';
+"use client";
 
-import React, { useEffect, ReactNode } from 'react';
-import clsx from 'clsx';
+import React, { ReactNode } from "react";
+import { Dialog, Flex, IconButton } from "@radix-ui/themes";
+
+type ModalSize = "sm" | "md" | "lg" | "xl";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: ModalSize;
   showCloseButton?: boolean;
 }
+
+const sizeToWidth: Record<ModalSize, number> = {
+  sm: 420,
+  md: 520,
+  lg: 720,
+  xl: 960,
+};
 
 export function Modal({
   isOpen,
   onClose,
   title,
   children,
-  size = 'md',
+  size = "md",
   showCloseButton = true,
 }: ModalProps) {
-  // Close on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const sizeStyles = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal content */}
-      <div
-        className={clsx(
-          'relative bg-white rounded-lg shadow-xl w-full mx-4 animate-slide-up',
-          sizeStyles[size]
-        )}
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => (!open ? onClose() : undefined)}
+    >
+      <Dialog.Content
+        maxWidth={`${sizeToWidth[size]}px`}
+        aria-describedby={undefined}
+        style={{ width: "100%" }}
       >
-        {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            {title && <h2 className="text-xl font-semibold text-gray-900">{title}</h2>}
+          <Flex justify="between" align="center" mb="3">
+            {title ? <Dialog.Title>{title}</Dialog.Title> : <div />}
             {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              <Dialog.Close>
+                <IconButton
+                  variant="ghost"
+                  color="gray"
+                  aria-label="Close"
+                ></IconButton>
+              </Dialog.Close>
             )}
-          </div>
+          </Flex>
         )}
 
-        {/* Body */}
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
+        {children}
+      </Dialog.Content>
+    </Dialog.Root>
   );
 }

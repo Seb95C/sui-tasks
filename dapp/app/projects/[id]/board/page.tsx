@@ -8,6 +8,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Container, Flex, Heading, Text, Spinner, IconButton } from '@radix-ui/themes';
+import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useWallet } from '@/contexts/WalletContext';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useTickets } from '@/contexts/TicketContext';
@@ -86,74 +88,54 @@ export default function BoardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
-      </div>
+      <Container size="4" px="4" py="8">
+        <Flex align="center" justify="center" style={{ minHeight: '60vh' }}>
+          <Spinner size="3" />
+        </Flex>
+      </Container>
     );
   }
 
   if (!currentProject) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Project not found</h2>
-          <button
-            onClick={() => router.push('/projects')}
-            className="mt-4 text-primary-600 hover:text-primary-700"
-          >
-            Back to Projects
-          </button>
-        </div>
-      </div>
+      <Container size="4" px="4" py="8">
+        <Flex direction="column" align="center" gap="3">
+          <Heading size="5">Project not found</Heading>
+          <Text color="gray">The requested project does not exist.</Text>
+          <Button onClick={() => router.push('/projects')}>Back to Projects</Button>
+        </Flex>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <Link
-            href={`/projects/${projectId}`}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+    <Container size="4" px="4" py="6">
+      <Flex align="center" justify="between" mb="5">
+        <Flex align="center" gap="3">
+          <Link href={`/projects/${projectId}`}>
+            <IconButton variant="ghost" color="gray" aria-label="Back to project">
+              <ArrowLeftIcon />
+            </IconButton>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {currentProject.name}
-            </h1>
-            <p className="text-gray-600 text-sm">Kanban Board</p>
+            <Heading size="5">{currentProject.name}</Heading>
+            <Text color="gray" size="2">
+              Kanban Board
+            </Text>
           </div>
-        </div>
+        </Flex>
 
         {userCanCreateTicket && (
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Create Ticket
-          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>Create Ticket</Button>
         )}
-      </div>
+      </Flex>
 
-      {/* Kanban board */}
       <KanbanBoard
         tickets={tickets}
         onTicketClick={handleTicketClick}
         onStatusChange={handleStatusChange}
       />
 
-      {/* Ticket detail modal */}
       {currentTicket && (
         <TicketDetailModal
           isOpen={isDetailModalOpen}
@@ -163,7 +145,6 @@ export default function BoardPage() {
         />
       )}
 
-      {/* Create ticket modal */}
       <CreateTicketModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -171,6 +152,6 @@ export default function BoardPage() {
         members={projectMembers}
         onSubmit={createTicket}
       />
-    </div>
+    </Container>
   );
 }

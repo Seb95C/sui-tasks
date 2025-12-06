@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Container, Flex, Spinner, Heading, Text } from '@radix-ui/themes';
 import { useWallet } from '@/contexts/WalletContext';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useTickets } from '@/contexts/TicketContext';
@@ -14,6 +15,7 @@ import { ProjectDashboard } from '@/components/projects/ProjectDashboard';
 import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
 import { AddMemberModal } from '@/components/projects/AddMemberModal';
 import { canAddMembers } from '@/lib/utils/permissions';
+import { Button } from '@/components/ui/Button';
 
 export default function ProjectDashboardPage() {
   const params = useParams();
@@ -58,25 +60,23 @@ export default function ProjectDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
-      </div>
+      <Container size="4" px="4" py="8">
+        <Flex align="center" justify="center" style={{ minHeight: '60vh' }}>
+          <Spinner size="3" />
+        </Flex>
+      </Container>
     );
   }
 
   if (!currentProject || !projectStats) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Project not found</h2>
-          <button
-            onClick={() => router.push('/projects')}
-            className="mt-4 text-primary-600 hover:text-primary-700"
-          >
-            Back to Projects
-          </button>
-        </div>
-      </div>
+      <Container size="4" px="4" py="8">
+        <Flex direction="column" align="center" gap="3">
+          <Heading size="5">Project not found</Heading>
+          <Text color="gray">The requested project does not exist.</Text>
+          <Button onClick={() => router.push('/projects')}>Back to Projects</Button>
+        </Flex>
+      </Container>
     );
   }
 
@@ -85,7 +85,7 @@ export default function ProjectDashboardPage() {
     : false;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Container size="4" px="4" py="6">
       <ProjectDashboard
         project={currentProject}
         stats={projectStats}
@@ -96,7 +96,6 @@ export default function ProjectDashboardPage() {
         onCreateTicket={() => setIsCreateTicketModalOpen(true)}
       />
 
-      {/* Create ticket modal */}
       <CreateTicketModal
         isOpen={isCreateTicketModalOpen}
         onClose={() => setIsCreateTicketModalOpen(false)}
@@ -105,13 +104,12 @@ export default function ProjectDashboardPage() {
         onSubmit={createTicket}
       />
 
-      {/* Add member modal */}
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
         onClose={() => setIsAddMemberModalOpen(false)}
         projectId={projectId}
         onSubmit={addMember}
       />
-    </div>
+    </Container>
   );
 }

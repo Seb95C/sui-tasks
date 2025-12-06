@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Card, Flex, Text, Heading, Badge } from '@radix-ui/themes';
 import { Project } from '@/types/project';
 import { formatRelativeTime } from '@/lib/utils/formatting';
 
@@ -17,63 +18,33 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link href={`/projects/${project.id}`}>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all cursor-pointer">
-        {/* Project name */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          {project.name}
-        </h3>
+      <Card
+        size="3"
+        variant="surface"
+        className="hover:shadow-md transition-shadow cursor-pointer"
+        style={{ height: '100%' }}
+      >
+        <Flex direction="column" gap="3">
+          <Heading size="4">{project.name}</Heading>
+          <Text color="gray" size="2" className="line-clamp-2">
+            {project.description}
+          </Text>
 
-        {/* Project description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {project.description}
-        </p>
-
-        {/* Project stats */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-4">
-            {/* Members count */}
-            <div className="flex items-center text-gray-500">
-              <svg
-                className="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              <span>{project.membersCount || 0} members</span>
-            </div>
-
-            {/* Tickets count */}
-            <div className="flex items-center text-gray-500">
-              <svg
-                className="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <span>{project.ticketsCount || 0} tickets</span>
-            </div>
-          </div>
-
-          {/* Created date */}
-          <span className="text-gray-400 text-xs">
-            {formatRelativeTime(project.createdAt)}
-          </span>
-        </div>
-      </div>
+          <Flex align="center" justify="between" mt="2">
+            <Flex align="center" gap="3">
+              <Badge color="indigo" variant="soft">
+                {project.membersCount || 0} members
+              </Badge>
+              <Badge color="gray" variant="soft">
+                {project.ticketsCount || 0} tickets
+              </Badge>
+            </Flex>
+            <Text color="gray" size="1">
+              {formatRelativeTime(project.createdAt)}
+            </Text>
+          </Flex>
+        </Flex>
+      </Card>
     </Link>
   );
 }

@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Badge } from '@radix-ui/themes';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -161,14 +162,14 @@ export function TicketDetailModal({
               <Select
                 label="Status"
                 value={status}
-                onChange={(e) => setStatus(e.target.value as TicketStatus)}
+                onValueChange={(value) => setStatus(value as TicketStatus)}
                 options={statusOptions}
                 disabled={loading}
               />
               <Select
                 label="Priority"
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as TicketPriority)}
+                onValueChange={(value) => setPriority(value as TicketPriority)}
                 options={priorityOptions}
                 disabled={loading}
               />
@@ -177,15 +178,15 @@ export function TicketDetailModal({
             <>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Status</p>
-                <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
+                <Badge color="indigo" variant="soft">
                   {formatEnumLabel(ticket.status)}
-                </span>
+                </Badge>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Priority</p>
-                <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
+                <Badge color="yellow" variant="soft">
                   {formatEnumLabel(ticket.priority)}
-                </span>
+                </Badge>
               </div>
             </>
           )}
@@ -196,7 +197,7 @@ export function TicketDetailModal({
           <Select
             label="Assignee"
             value={assigneeId}
-            onChange={(e) => setAssigneeId(e.target.value)}
+            onValueChange={(value) => setAssigneeId(value)}
             options={assigneeOptions}
             disabled={loading}
           />

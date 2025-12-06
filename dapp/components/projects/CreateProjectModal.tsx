@@ -180,7 +180,7 @@ export function CreateProjectModal({
                 <div className="w-32">
                   <Select
                     value={member.role}
-                    onChange={(e) => updateMemberRole(index, e.target.value as MemberRole)}
+                    onValueChange={(value) => updateMemberRole(index, value as MemberRole)}
                     options={roleOptions}
                     disabled={loading}
                   />
