@@ -23,5 +23,16 @@ contract/build/
 contract/.trace
 contract/.coverage*
 
+# Indexer workspace
+indexer/sui-task-indexer/node_modules/
+indexer/sui-task-indexer/.env
+indexer/sui-task-indexer/.env*.local
+indexer/sui-task-indexer/.env.production
+indexer/sui-task-indexer/.claude/
+indexer/sui-task-indexer/*.log
+indexer/sui-task-indexer/dist/
+indexer/sui-task-indexer/build/
+indexer/sui-task-indexer/*.tsbuildinfo
+
 # Windows Zone.Identifier files
 *:Zone.Identifier
