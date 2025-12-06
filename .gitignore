@@ -19,9 +19,9 @@ dapp/next-env.d.ts
 dapp/.claude/
 
 # Move/contract artifacts
-contract/build/
-contract/.trace
-contract/.coverage*
+sui-tasks-engine/build/
+sui-tasks-engine/.trace
+sui-tasks-engine/.coverage*
 
 # Indexer workspace
 indexer/sui-task-indexer/node_modules/
