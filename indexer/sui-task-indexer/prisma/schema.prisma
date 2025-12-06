@@ -1,0 +1,224 @@
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+
+model AttachmentAdded {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  attachment_id String
+  name String
+  url String
+  added_by String
+}
+
+model AttachmentRemoved {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  attachment_id String
+  removed_by String
+}
+
+model DeleteTask {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  deleted_by String
+}
+
+model MemberAdded {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  member_address String
+  display_name String
+  joined_at String
+  added_by String
+}
+
+model MemberRemoved {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  member_address String
+  removed_by String
+}
+
+model ProjectCreated {
+  dbId String @id @unique @default(uuid())
+  id String
+  manager String
+  name String
+  description String
+  manager_cap_id String
+}
+
+model SubtaskAdded {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  subtask_id String
+  name String
+  description String
+  state Int
+  added_by String
+}
+
+model SubtaskDeleted {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  subtask_id String
+  deleted_by String
+}
+
+model SubtaskUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  subtask_id String
+  updated_by String
+}
+
+model TaskAdded {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  name String
+  description String
+  assignee String
+  state Int
+  due_date String
+  added_by String
+}
+
+model TaskAssigneeUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  old_assignee String
+  new_assignee String
+  updated_by String
+}
+
+model TaskDescriptionUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  updated_by String
+}
+
+model TaskDueDateUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  old_due_date String
+  new_due_date String
+  updated_by String
+}
+
+model TaskNameUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  old_name String
+  new_name String
+  updated_by String
+}
+
+model TaskStateUpdated {
+  dbId String @id @unique @default(uuid())
+  project_id String
+  task_id String
+  old_state Int
+  new_state Int
+  updated_by String
+}
+
+model UsernameRegistered {
+  dbId String @id @unique @default(uuid())
+  username String
+  user_address String
+}
+
+
+model cursor {
+  id        String @id
+  eventSeq  String
+  txDigest  String
+}
+
+// ===================================
+// STATE TABLES - Current Object State
+// ===================================
+
+model Project {
+  id          String   @id
+  name        String
+  description String
+  manager     String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  members     Member[]
+  tasks       Task[]
+}
+
+model Member {
+  id           String  @id @default(uuid())
+  project_id   String
+  address      String
+  display_name String
+  joined_at    String
+
+  project      Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, address])
+}
+
+model Task {
+  id          String   @id
+  project_id  String
+  name        String
+  description String
+  assignee    String
+  state       Int
+  due_date    String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  project     Project      @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  subtasks    Subtask[]
+  attachments Attachment[]
+}
+
+model Subtask {
+  id          String @id @default(uuid())
+  task_id     String
+  subtask_id  String
+  name        String
+  description String
+  state       Int
+
+  task        Task   @relation(fields: [task_id], references: [id], onDelete: Cascade)
+
+  @@unique([task_id, subtask_id])
+}
+
+model Attachment {
+  id            String @id @default(uuid())
+  task_id       String
+  attachment_id String
+  name          String
+  url           String
+
+  task          Task   @relation(fields: [task_id], references: [id], onDelete: Cascade)
+
+  @@unique([task_id, attachment_id])
+}
