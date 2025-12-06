@@ -69,3 +69,31 @@ export function formatEnumLabel(value: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
+
+/**
+ * Format due date from milliseconds timestamp
+ * e.g., "Jan 15, 2024"
+ */
+export function formatDueDate(timestampMs: string | number): string {
+  try {
+    const ms = typeof timestampMs === 'string' ? parseInt(timestampMs) : timestampMs;
+    if (!ms || ms === 0) return 'No due date';
+    const date = new Date(ms);
+    return format(date, 'MMM d, yyyy');
+  } catch {
+    return 'Invalid date';
+  }
+}
+
+/**
+ * Check if due date is overdue
+ */
+export function isDueDateOverdue(timestampMs: string | number): boolean {
+  try {
+    const ms = typeof timestampMs === 'string' ? parseInt(timestampMs) : timestampMs;
+    if (!ms || ms === 0) return false;
+    return new Date(ms) < new Date();
+  } catch {
+    return false;
+  }
+}

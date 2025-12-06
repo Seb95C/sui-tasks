@@ -14,6 +14,7 @@ import {
   buildAddMemberTx,
   buildRemoveMemberTx,
 } from '@/lib/sui/transactions';
+import { fetchAddressByUsername } from '@/lib/api/usernames';
 
 interface Member {
   address: string;
@@ -45,30 +46,41 @@ export function MemberManagementModal({
   const [loading, setLoading] = useState(false);
 
   // Form state
-  const [memberAddress, setMemberAddress] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
 
   const handleAddMember = async () => {
-    if (!memberAddress.trim() || !displayName.trim()) {
-      alert('Please enter both address and display name');
+    if (!username.trim()) {
+      setError('Please enter a username');
       return;
     }
 
     setLoading(true);
+    setError('');
+
     try {
+      // Lookup address by username
+      const userRecord = await fetchAddressByUsername(username);
+
+      if (!userRecord) {
+        setError('Username not found in registry. User must register first.');
+        setLoading(false);
+        return;
+      }
+
       const tx = buildAddMemberTx({
         managerCapId,
         projectId,
-        memberAddress,
-        displayName
+        memberAddress: userRecord.address,
+        displayName: userRecord.username,
       });
 
       await signAndExecuteTransaction(
         { transaction: tx },
         {
           onSuccess: () => {
-            setMemberAddress('');
-            setDisplayName('');
+            setUsername('');
+            setError('');
             setIsAdding(false);
             setTimeout(() => onMembersUpdated(), 1500);
           },
@@ -76,7 +88,7 @@ export function MemberManagementModal({
       );
     } catch (error) {
       console.error('Failed to add member:', error);
-      alert('Failed to add member. Make sure the address is registered.');
+      setError('Failed to add member. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -152,19 +164,19 @@ export function MemberManagementModal({
         {isAdding ? (
           <div className="border-t border-gray-200 pt-4 space-y-3">
             <h4 className="text-sm font-medium text-gray-900">Add New Member</h4>
+            <p className="text-xs text-gray-600">
+              Enter the username of a registered user to add them to the project.
+            </p>
             <Input
-              label="Wallet Address"
-              value={memberAddress}
-              onChange={(e) => setMemberAddress(e.target.value)}
-              placeholder="0x..."
+              label="Username"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setError('');
+              }}
+              placeholder="e.g., alice"
               disabled={loading}
-            />
-            <Input
-              label="Display Name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Member's display name"
-              disabled={loading}
+              error={error}
             />
             <div className="flex justify-end space-x-2">
               <Button
@@ -172,8 +184,8 @@ export function MemberManagementModal({
                 variant="secondary"
                 onClick={() => {
                   setIsAdding(false);
-                  setMemberAddress('');
-                  setDisplayName('');
+                  setUsername('');
+                  setError('');
                 }}
                 disabled={loading}
               >

@@ -143,17 +143,41 @@ export default function ProjectsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Projects</h1>
-          <p className="text-gray-600 mt-1">
-            Welcome, {username}! Manage and view all your projects
-          </p>
-        </div>
+      <div className="mb-10">
+        <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl p-8 shadow-soft-lg overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32 animate-float"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
 
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          Create Project
-        </Button>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">
+                My Projects
+              </h1>
+              <p className="text-purple-100 text-lg">
+                Welcome back, <span className="font-semibold text-white">{username}</span>! ✨
+              </p>
+              <div className="mt-4 flex items-center gap-4">
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  <span className="text-white font-semibold">{projects.length} Projects</span>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-white text-purple-600 hover:bg-purple-50 shadow-xl font-bold"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Project
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Projects list */}
@@ -161,6 +185,7 @@ export default function ProjectsPage() {
         projects={projects}
         loading={loading}
         onCreateProject={() => setIsCreateModalOpen(true)}
+        currentUserAddress={currentAccount?.address}
       />
 
       {/* Create project modal */}

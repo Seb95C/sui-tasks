@@ -19,3 +19,18 @@ export async function fetchUsernameByAddress(address: string): Promise<UsernameR
 
   return records[0] || null;
 }
+
+export async function fetchAddressByUsername(username: string): Promise<{ username: string; address: string } | null> {
+  const user = username.trim();
+  if (!user) return null;
+
+  try {
+    const result = await request<{ username: string; address: string }>(
+      `/api/usernames/by-username?username=${encodeURIComponent(user)}`,
+    );
+    return result;
+  } catch (error) {
+    // Return null if username not found (404)
+    return null;
+  }
+}

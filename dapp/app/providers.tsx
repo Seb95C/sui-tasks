@@ -28,8 +28,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork={network}>
-        <DappKitWalletProvider>
-          <WalletProvider>
+        <DappKitWalletProvider autoConnect>
+          <WalletProvider >
             <ProjectProvider>
               {/* Global Header */}
               <Header />

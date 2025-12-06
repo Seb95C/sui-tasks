@@ -23,7 +23,9 @@ import {
   buildMemberUpdateTaskDescriptionTx,
   buildMemberUpdateTaskDueDateTx,
   buildAssigneeUpdateTaskStateTx,
+  buildDeleteTaskTx,
 } from '@/lib/sui/transactions';
+import { formatDueDate, isDueDateOverdue } from '@/lib/utils/formatting';
 
 // Task states
 const TASK_STATES = {
@@ -188,15 +190,65 @@ export function TaskDetailModal({
     setIsEditing(false);
   };
 
+  const handleDeleteTask = async () => {
+    if (!isManager || !managerCapId) {
+      alert('Only managers can delete tasks');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete the task "${task.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tx = buildDeleteTaskTx({
+        managerCapId,
+        projectId,
+        taskId: task.id,
+      });
+
+      await signAndExecuteTransaction(
+        { transaction: tx },
+        {
+          onSuccess: () => {
+            onClose();
+            setTimeout(() => {
+              onTaskUpdated();
+            }, 1500);
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert('Failed to delete task. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Task Details" size="2xl">
       <div className="space-y-6">
-        {/* Edit button */}
+        {/* Edit and Delete buttons */}
         {!isEditing && canEdit && (
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => setIsEditing(true)}>
-              Edit Task
-            </Button>
+          <div className="flex justify-between items-center">
+            {isManager && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleDeleteTask}
+                disabled={loading}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Delete Task
+              </Button>
+            )}
+            <div className={`${isManager ? '' : 'w-full flex justify-end'}`}>
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                Edit Task
+              </Button>
+            </div>
           </div>
         )}
 
@@ -285,25 +337,33 @@ export function TaskDetailModal({
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">Assignee</p>
               <p className="text-gray-600">
-                {members.find((m) => m.address === task.assignee)?.displayName || 'Unknown'}
+                {members.find((m) => m.address.toLowerCase() === task.assignee.toLowerCase())?.displayName ||
+                  `${task.assignee.substring(0, 6)}...${task.assignee.substring(task.assignee.length - 4)}`}
               </p>
             </div>
           )}
 
           {/* Due Date */}
-          {isEditing ? (
-            <Input
-              label="Due Date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              disabled={loading}
-            />
+          {isEditing && (isManager || isAssignee) ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                disabled={loading}
+              />
+            </div>
           ) : (
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">Due Date</p>
-              <p className="text-gray-600">
-                {new Date(parseInt(task.dueDate)).toLocaleDateString()}
+              <p className={`font-medium ${isDueDateOverdue(task.dueDate) ? 'text-red-600' : 'text-gray-600'}`}>
+                {formatDueDate(task.dueDate)}
+                {isDueDateOverdue(task.dueDate) && (
+                  <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                    Overdue
+                  </span>
+                )}
               </p>
             </div>
           )}
