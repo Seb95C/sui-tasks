@@ -1,311 +1,129 @@
-/**
- * Project Context
- * Manages projects state and operations
- */
+'use context'
+import React, { createContext, useContext, ReactNode } from "react";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useQuery } from "@tanstack/react-query";
 
-'use client';
-
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Project, CreateProjectInput, ProjectStats } from '@/types/project';
-import { ProjectMember } from '@/types/user';
-import {
-  fetchUserProjects,
-  fetchProjectById,
-  fetchProjectStats,
-  fetchProjectMembers,
-  syncProjectToIndexer,
-} from '@/lib/api/projects';
-import {
-  buildCreateProjectTransaction,
-  buildAddMemberTransaction,
-} from '@/lib/sui/transactions';
-import { useWallet } from './WalletContext';
-
-interface ProjectContextType {
-  // State
-  projects: Project[];
-  currentProject: Project | null;
-  projectStats: ProjectStats | null;
-  projectMembers: ProjectMember[];
-  loading: boolean;
-  error: string | null;
-
-  // Actions
-  loadUserProjects: () => Promise<void>;
-  loadProject: (projectId: string) => Promise<void>;
-  createProject: (input: CreateProjectInput) => Promise<string>;
-  addMember: (projectId: string, userAddress: string, role: any) => Promise<void>;
+// ---------------------------
+// Types
+// ---------------------------
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  manager: string;
+  created_at: Date;
+  updated_at: Date;
+  members: Member[];
+  tasks: Task[];
 }
 
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+export interface Member {
+  id: string;
+  project_id: string;
+  address: string;
+  display_name: string;
+  joined_at: string;
+}
 
-export function ProjectProvider({ children }: { children: ReactNode }) {
-  const { currentAccount, signAndExecuteTransaction } = useWallet();
+export interface Task {
+  id: string;
+  project_id: string;
+  name: string;
+  description: string;
+  assignee: string;
+  state: number;
+  due_date: string;
+  created_at: Date;
+  updated_at: Date;
+  subtasks: Subtask[];
+  attachments: Attachment[];
+}
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [projectStats, setProjectStats] = useState<ProjectStats | null>(null);
-  const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export interface Subtask {
+  id: string;
+  task_id: string;
+  subtask_id: string;
+  name: string;
+  description: string;
+  state: number;
+}
 
-  /**
-   * Load all projects for the connected user
-   */
-  const loadUserProjects = useCallback(async () => {
-    // Note: Wallet connection not required in simulation mode
-    // if (!currentAccount) return;
+export interface Attachment {
+  id: string;
+  task_id: string;
+  attachment_id: string;
+  name: string;
+  url: string;
+}
 
-    setLoading(true);
-    setError(null);
+// ---------------------------
+// Context Type
+// ---------------------------
+type ProjectsContextType = {
+  projects: Project[];
+  loading: boolean;
+  error: unknown;
+  refetch: () => void;
 
-    try {
-      // SIMULATION MODE: Using mock data
-      // TODO: Uncomment when indexer is ready
-      // const data = await fetchUserProjects(currentAccount.address);
+  // (future mutation support)
+  createProject?: (data: any) => Promise<void>;
+  addMember?: (projectId: string, member: any) => Promise<void>;
+};
 
-      // For now, use mock data
-      const { mockProjects, simulateDelay } = await import('@/lib/mock/data');
-      await simulateDelay();
-      setProjects(mockProjects);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load projects');
-      console.error('Error loading projects:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentAccount]);
+// ---------------------------
+const ProjectsContext = createContext<ProjectsContextType | undefined>(
+  undefined
+);
 
-  /**
-   * Load a specific project with its details
-   */
-  const loadProject = useCallback(async (projectId: string) => {
-    setLoading(true);
-    setError(null);
+// ---------------------------
+// Fetch many projects
+// ---------------------------
+async function fetchProjects(address: string): Promise<Project[]> {
+  const res = await fetch(`/api/projects?address=${address}`);
 
-    try {
-      // SIMULATION MODE: Using mock data
-      // TODO: Uncomment when indexer is ready
-      // const [project, stats, members] = await Promise.all([
-      //   fetchProjectById(projectId),
-      //   fetchProjectStats(projectId),
-      //   fetchProjectMembers(projectId),
-      // ]);
+  if (!res.ok) {
+    console.warn("Failed fetching projects");
+    return [];
+  }
 
-      // For now, use mock data
-      const { mockProjects, mockProjectStats, mockProjectMembers, simulateDelay } = await import('@/lib/mock/data');
-      await simulateDelay();
+  return res.json();
+}
 
-      const project = mockProjects.find(p => p.id === projectId);
-      const stats = mockProjectStats[projectId];
-      const members = mockProjectMembers[projectId] || [];
+// ---------------------------
+// Provider
+// ---------------------------
+export const ProjectsProvider = ({ children }: { children: ReactNode }) => {
+  const account = useCurrentAccount();
+  const address = account?.address;
 
-      if (!project) {
-        throw new Error('Project not found');
-      }
-
-      setCurrentProject(project);
-      setProjectStats(stats);
-      setProjectMembers(members);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load project');
-      console.error('Error loading project:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Create a new project on the blockchain
-   */
-  const createProject = useCallback(
-    async (input: CreateProjectInput) => {
-      // SIMULATION MODE: Commenting out blockchain transactions
-      // TODO: Uncomment when ready to use blockchain
-      /*
-      if (!currentAccount || !signAndExecuteTransaction) {
-        throw new Error('Wallet not connected');
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Build the transaction
-        const tx = buildCreateProjectTransaction(input);
-
-        // Sign and execute on Sui blockchain
-        const result = await signAndExecuteTransaction({
-          transaction: tx,
-          options: {
-            showEffects: true,
-            showObjectChanges: true,
-          },
-        });
-
-        // Extract the created project object ID from the result
-        const createdObjects = result.effects?.created || [];
-        const projectObject = createdObjects[0]; // Assuming first created object is the project
-
-        if (projectObject) {
-          // Sync to indexer for fast queries
-          await syncProjectToIndexer(projectObject.reference.objectId);
-
-          // Reload user's projects
-          await loadUserProjects();
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to create project');
-        console.error('Error creating project:', err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-      */
-
-      // SIMULATION MODE: Mock project creation
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { simulateDelay } = await import('@/lib/mock/data');
-        await simulateDelay(1000);
-
-        // Create a mock project
-        const projectId = `project-${Date.now()}`;
-        const newProject: Project = {
-          id: projectId,
-          objectId: projectId,
-          name: input.name,
-          description: input.description,
-          creator: currentAccount?.address || '0x1234567890abcdef1234567890abcdef12345678',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          membersCount: 1,
-          ticketsCount: 0,
-        };
-
-        setProjects(prev => [newProject, ...prev]);
-        console.log('✅ Project created (simulation):', newProject);
-
-        // Return the project ID so caller can add initial members
-        return projectId;
-      } catch (err: any) {
-        setError(err.message || 'Failed to create project');
-        console.error('Error creating project:', err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [currentAccount, signAndExecuteTransaction, loadUserProjects]
-  );
-
-  /**
-   * Add a member to a project
-   */
-  const addMember = useCallback(
-    async (projectId: string, userAddress: string, role: any) => {
-      // SIMULATION MODE: Commenting out blockchain transactions
-      // TODO: Uncomment when ready to use blockchain
-      /*
-      if (!currentAccount || !signAndExecuteTransaction) {
-        throw new Error('Wallet not connected');
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const tx = buildAddMemberTransaction({ projectId, userAddress, role });
-
-        await signAndExecuteTransaction({
-          transaction: tx,
-        });
-
-        // Reload project members
-        if (currentProject?.id === projectId) {
-          await loadProject(projectId);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to add member');
-        console.error('Error adding member:', err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-      */
-
-      // SIMULATION MODE: Mock add member
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { mockUsers, simulateDelay } = await import('@/lib/mock/data');
-        await simulateDelay(800);
-
-        // Find or create a user for this address
-        let user = mockUsers.find(u => u.address === userAddress);
-
-        // If not found, create a new user
-        if (!user) {
-          user = {
-            id: `user-${Date.now()}`,
-            address: userAddress,
-            username: `User ${userAddress.slice(0, 6)}`,
-            createdAt: new Date().toISOString(),
-          };
-        }
-
-        // Create new member
-        const newMember: ProjectMember = {
-          id: `member-${Date.now()}`,
-          userId: user.id,
-          projectId,
-          role,
-          user,
-          joinedAt: new Date().toISOString(),
-        };
-
-        // Add to project members state
-        setProjectMembers(prev => [...prev, newMember]);
-
-        console.log('✅ Member added (simulation):', newMember);
-      } catch (err: any) {
-        setError(err.message || 'Failed to add member');
-        console.error('Error adding member:', err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [currentAccount, signAndExecuteTransaction, currentProject, loadProject]
-  );
-
-  const value: ProjectContextType = {
-    projects,
-    currentProject,
-    projectStats,
-    projectMembers,
-    loading,
-    error,
-    loadUserProjects,
-    loadProject,
-    createProject,
-    addMember,
-  };
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["projects", address],
+    queryFn: () => fetchProjects(address!),
+    enabled: !!address,
+    staleTime: 1000 * 60 * 2,
+  });
 
   return (
-    <ProjectContext.Provider value={value}>
+    <ProjectsContext.Provider
+      value={{
+        projects: data ?? [],
+        loading: isLoading,
+        error,
+        refetch,
+      }}
+    >
       {children}
-    </ProjectContext.Provider>
+    </ProjectsContext.Provider>
   );
-}
+};
 
-export function useProjects() {
-  const context = useContext(ProjectContext);
-  if (context === undefined) {
-    throw new Error('useProjects must be used within a ProjectProvider');
+// ---------------------------
+// Hook
+// ---------------------------
+export const useProjects = () => {
+  const context = useContext(ProjectsContext);
+  if (!context) {
+    throw new Error("useProjects must be used within ProjectsProvider");
   }
   return context;
-}
+};
