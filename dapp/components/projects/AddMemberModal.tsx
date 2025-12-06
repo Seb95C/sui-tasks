@@ -9,12 +9,13 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { fetchAddressByUsername } from '@/lib/api/usernames';
 
 interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
-  onSubmit: (projectId: string, userAddress: string, displayName: string) => Promise<void>;
+  onSubmit: (projectId: string, userAddress: string, username: string) => Promise<void>;
 }
 
 export function AddMemberModal({
@@ -23,54 +24,47 @@ export function AddMemberModal({
   projectId,
   onSubmit,
 }: AddMemberModalProps) {
-  const [userAddress, setUserAddress] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ userAddress?: string; displayName?: string }>({});
-
-  const validate = () => {
-    const newErrors: { userAddress?: string; displayName?: string } = {};
-
-    if (!userAddress.trim()) {
-      newErrors.userAddress = 'Sui address is required';
-    } else if (!userAddress.startsWith('0x')) {
-      newErrors.userAddress = 'Address must start with 0x';
-    } else if (userAddress.length < 10) {
-      newErrors.userAddress = 'Invalid Sui address format';
-    }
-
-    if (!displayName.trim()) {
-      newErrors.displayName = 'Display name is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!username.trim()) {
+      setError('Username is required');
+      return;
+    }
 
     setLoading(true);
+    setError('');
 
     try {
-      await onSubmit(projectId, userAddress.trim(), displayName.trim());
+      // Lookup address by username
+      const userRecord = await fetchAddressByUsername(username);
+
+      if (!userRecord) {
+        setError('Username not found in registry. User must register first.');
+        setLoading(false);
+        return;
+      }
+
+      await onSubmit(projectId, userRecord.address, userRecord.username);
 
       // Reset form and close
       resetForm();
       onClose();
     } catch (error) {
       console.error('Failed to add member:', error);
+      setError('Failed to add member. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const resetForm = () => {
-    setUserAddress('');
-    setDisplayName('');
-    setErrors({});
+    setUsername('');
+    setError('');
   };
 
   const handleClose = () => {
@@ -90,33 +84,26 @@ export function AddMemberModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <p className="text-sm text-blue-800">
-            <strong>💡 Simulation Mode:</strong> You can add any Sui address or use one of the sample addresses below:
+            <strong>💡 Username Registry:</strong> Only registered users can be added as members.
           </p>
-          <div className="mt-2 space-y-1 text-xs font-mono text-blue-700">
-            <p>• 0xabcdef1234567890abcdef1234567890abcdef12 (Bob)</p>
-            <p>• 0x9876543210fedcba9876543210fedcba98765432 (Charlie)</p>
+          <div className="mt-2 space-y-1 text-xs text-blue-700">
+            <p>Enter the username of a user who has already registered in the system.</p>
+            <p className="font-mono mt-2">Sample usernames: alice, bob, charlie</p>
           </div>
         </div>
 
         <Input
-          label="Member Sui Address"
-          placeholder="0x..."
-          value={userAddress}
-          onChange={(e) => setUserAddress(e.target.value)}
-          error={errors.userAddress}
+          label="Username"
+          placeholder="e.g., alice"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setError('');
+          }}
+          error={error}
           disabled={loading}
           required
-          helperText="Enter the Sui wallet address of the person you want to add"
-        />
-
-        <Input
-          label="Display name"
-          placeholder="Team member name as it should appear"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          error={errors.displayName}
-          disabled={loading}
-          required
+          helperText="Enter the username of the person you want to add"
         />
 
         <div className="flex justify-end space-x-3 pt-4">
