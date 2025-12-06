@@ -14,9 +14,9 @@ import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { Button } from '@/components/ui/Button';
 
 export default function ProjectsPage() {
-  const router = useRouter();
-  const { isConnected, currentAccount } = useWallet();
-  const { projects, loading, loadUserProjects, createProject, addMember } = useProjects();
+  // const router = useRouter();
+  // const { isConnected, currentAccount } = useWallet();
+  const {projects, isLoading, error, refetch} = useProjects();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleCreateWithMembers = async (input: any) => {
