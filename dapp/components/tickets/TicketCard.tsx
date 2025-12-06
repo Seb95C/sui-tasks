@@ -7,44 +7,44 @@
 
 import React from 'react';
 import { useDrag } from 'react-dnd';
-import { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
+import { Task, TaskState } from '@/types/task';
 import { formatAddress } from '@/lib/utils/formatting';
 
 interface TicketCardProps {
-  ticket: Ticket;
+  task: Task;
   onClick: () => void;
 }
 
 const DRAG_TYPE = 'TICKET';
 
-export function TicketCard({ ticket, onClick }: TicketCardProps) {
+export function TicketCard({ task, onClick }: TicketCardProps) {
   // Setup drag functionality
   const [{ isDragging }, drag] = useDrag<
-    { ticketId: string; currentStatus: TicketStatus },
+    { taskId: string; currentStatus: TaskState },
     void,
     { isDragging: boolean }
   >(() => ({
     type: DRAG_TYPE,
-    item: { ticketId: ticket.id, currentStatus: ticket.status },
+    item: { taskId: task.id, currentStatus: task.state },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
-  const getPriorityColor = (priority: TicketPriority) => {
-    switch (priority) {
-      case TicketPriority.URGENT:
-        return 'bg-red-100 text-red-700 border-red-200';
-      case TicketPriority.HIGH:
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case TicketPriority.MEDIUM:
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case TicketPriority.LOW:
-        return 'bg-green-100 text-green-700 border-green-200';
+  const stateLabel = (state: TaskState) => {
+    switch (state) {
+      case TaskState.TODO:
+        return { label: 'To Do', className: 'bg-gray-100 text-gray-700 border-gray-200' };
+      case TaskState.IN_PROGRESS:
+        return { label: 'In Progress', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
+      case TaskState.DONE:
+        return { label: 'Done', className: 'bg-green-100 text-green-700 border-green-200' };
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return { label: 'Open', className: 'bg-gray-100 text-gray-700 border-gray-200' };
     }
   };
+
+  const badge = stateLabel(task.state);
 
   return (
     <div
@@ -57,39 +57,37 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
       {/* Priority badge */}
       <div className="flex items-center justify-between mb-2">
         <span
-          className={`px-2 py-1 rounded text-xs font-medium border ${getPriorityColor(
-            ticket.priority
-          )}`}
+          className={`px-2 py-1 rounded text-xs font-medium border ${badge.className}`}
         >
-          {ticket.priority}
+          {badge.label}
         </span>
 
         {/* Ticket ID */}
         <span className="text-xs text-gray-400 font-mono">
-          #{ticket.id.slice(0, 8)}
+          #{task.id.slice(0, 8)}
         </span>
       </div>
 
       {/* Title */}
       <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-        {ticket.title}
+        {task.name}
       </h4>
 
       {/* Description preview */}
       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-        {ticket.description}
+        {task.description}
       </p>
 
       {/* Footer with assignee */}
-      {ticket.assignee && (
+      {task.assignee && (
         <div className="flex items-center text-xs text-gray-500">
           <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center mr-2">
             <span className="text-primary-700 font-medium text-xs">
-              {ticket.assignee.username?.[0]?.toUpperCase() || '?'}
+              {(task.assignee || '0x?').slice(2, 3).toUpperCase()}
             </span>
           </div>
           <span>
-            {ticket.assignee.username || formatAddress(ticket.assignee.address)}
+            {formatAddress(task.assignee)}
           </span>
         </div>
       )}

@@ -8,16 +8,13 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { MemberRole } from '@/types/user';
-import { formatEnumLabel } from '@/lib/utils/formatting';
 
 interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
-  onSubmit: (projectId: string, userAddress: string, role: MemberRole) => Promise<void>;
+  onSubmit: (projectId: string, userAddress: string, displayName: string) => Promise<void>;
 }
 
 export function AddMemberModal({
@@ -27,12 +24,12 @@ export function AddMemberModal({
   onSubmit,
 }: AddMemberModalProps) {
   const [userAddress, setUserAddress] = useState('');
-  const [role, setRole] = useState<MemberRole>(MemberRole.MEMBER);
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ userAddress?: string }>({});
+  const [errors, setErrors] = useState<{ userAddress?: string; displayName?: string }>({});
 
   const validate = () => {
-    const newErrors: { userAddress?: string } = {};
+    const newErrors: { userAddress?: string; displayName?: string } = {};
 
     if (!userAddress.trim()) {
       newErrors.userAddress = 'Sui address is required';
@@ -40,6 +37,10 @@ export function AddMemberModal({
       newErrors.userAddress = 'Address must start with 0x';
     } else if (userAddress.length < 10) {
       newErrors.userAddress = 'Invalid Sui address format';
+    }
+
+    if (!displayName.trim()) {
+      newErrors.displayName = 'Display name is required';
     }
 
     setErrors(newErrors);
@@ -54,7 +55,7 @@ export function AddMemberModal({
     setLoading(true);
 
     try {
-      await onSubmit(projectId, userAddress.trim(), role);
+      await onSubmit(projectId, userAddress.trim(), displayName.trim());
 
       // Reset form and close
       resetForm();
@@ -68,7 +69,7 @@ export function AddMemberModal({
 
   const resetForm = () => {
     setUserAddress('');
-    setRole(MemberRole.MEMBER);
+    setDisplayName('');
     setErrors({});
   };
 
@@ -78,11 +79,6 @@ export function AddMemberModal({
       onClose();
     }
   };
-
-  const roleOptions = Object.values(MemberRole).map((r) => ({
-    value: r,
-    label: formatEnumLabel(r),
-  }));
 
   return (
     <Modal
@@ -113,21 +109,15 @@ export function AddMemberModal({
           helperText="Enter the Sui wallet address of the person you want to add"
         />
 
-        <Select
-          label="Role"
-          value={role}
-          onChange={(e) => setRole(e.target.value as MemberRole)}
-          options={roleOptions}
+        <Input
+          label="Display name"
+          placeholder="Team member name as it should appear"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          error={errors.displayName}
           disabled={loading}
+          required
         />
-
-        <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-          <p className="font-medium text-gray-900">Role Permissions:</p>
-          <ul className="space-y-1 text-gray-600">
-            <li><strong>Admin:</strong> Full access - can edit all tickets, add/remove members</li>
-            <li><strong>Member:</strong> Can create and edit own tickets</li>
-          </ul>
-        </div>
 
         <div className="flex justify-end space-x-3 pt-4">
           <Button

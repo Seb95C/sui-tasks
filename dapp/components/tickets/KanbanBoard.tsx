@@ -5,35 +5,35 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Ticket, TicketStatus } from '@/types/ticket';
+import { Task, TaskState } from '@/types/task';
 import { TicketCard } from './TicketCard';
 
 interface KanbanBoardProps {
-  tickets: Ticket[];
-  onTicketClick: (ticket: Ticket) => void;
-  onStatusChange: (ticketId: string, newStatus: TicketStatus) => void;
+  tasks: Task[];
+  onTaskClick: (task: Task) => void;
+  onStatusChange: (taskId: string, newStatus: TaskState) => void;
 }
 
 const DRAG_TYPE = 'TICKET';
 
 const COLUMNS = [
   {
-    status: TicketStatus.TODO,
+    status: TaskState.TODO,
     title: 'To Do',
     color: 'bg-gray-100',
     headerColor: 'bg-gray-200',
   },
   {
-    status: TicketStatus.IN_PROGRESS,
+    status: TaskState.IN_PROGRESS,
     title: 'In Progress',
     color: 'bg-yellow-50',
     headerColor: 'bg-yellow-100',
   },
   {
-    status: TicketStatus.DONE,
+    status: TaskState.DONE,
     title: 'Done',
     color: 'bg-green-50',
     headerColor: 'bg-green-100',
@@ -41,13 +41,13 @@ const COLUMNS = [
 ];
 
 interface ColumnProps {
-  status: TicketStatus;
+  status: TaskState;
   title: string;
   color: string;
   headerColor: string;
-  tickets: Ticket[];
-  onTicketClick: (ticket: Ticket) => void;
-  onDrop: (ticketId: string, newStatus: TicketStatus) => void;
+  tasks: Task[];
+  onTaskClick: (task: Task) => void;
+  onDrop: (taskId: string, newStatus: TaskState) => void;
 }
 
 function KanbanColumn({
@@ -55,20 +55,20 @@ function KanbanColumn({
   title,
   color,
   headerColor,
-  tickets,
-  onTicketClick,
+  tasks,
+  onTaskClick,
   onDrop,
 }: ColumnProps) {
   // Setup drop functionality
   const [{ isOver }, drop] = useDrop<
-    { ticketId: string; currentStatus: TicketStatus },
+    { taskId: string; currentStatus: TaskState },
     void,
     { isOver: boolean }
   >(() => ({
     accept: DRAG_TYPE,
     drop: (item) => {
       if (item.currentStatus !== status) {
-        onDrop(item.ticketId, status);
+        onDrop(item.taskId, status);
       }
     },
     collect: (monitor) => ({
@@ -84,7 +84,7 @@ function KanbanColumn({
       >
         <h3 className="font-semibold text-gray-900">{title}</h3>
         <span className="bg-white px-2 py-1 rounded text-sm font-medium text-gray-700">
-          {tickets.length}
+          {tasks.length}
         </span>
       </div>
 
@@ -95,16 +95,16 @@ function KanbanColumn({
           isOver ? 'ring-2 ring-primary-500 ring-opacity-50' : ''
         }`}
       >
-        {tickets.length === 0 ? (
+        {tasks.length === 0 ? (
           <div className="text-center text-gray-400 py-8">
             <p className="text-sm">No tickets</p>
           </div>
         ) : (
-          tickets.map((ticket) => (
+          tasks.map((task) => (
             <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              onClick={() => onTicketClick(ticket)}
+              key={task.id}
+              task={task}
+              onClick={() => onTaskClick(task)}
             />
           ))
         )}
@@ -113,21 +113,14 @@ function KanbanColumn({
   );
 }
 
-export function KanbanBoard({
-  tickets,
-  onTicketClick,
-  onStatusChange,
-}: KanbanBoardProps) {
-  // Group tickets by status
-  const ticketsByStatus = useMemo(() => {
+export function KanbanBoard({ tasks, onTaskClick, onStatusChange }: KanbanBoardProps) {
+  const tasksByState = useMemo(() => {
     return {
-      [TicketStatus.TODO]: tickets.filter((t) => t.status === TicketStatus.TODO),
-      [TicketStatus.IN_PROGRESS]: tickets.filter(
-        (t) => t.status === TicketStatus.IN_PROGRESS
-      ),
-      [TicketStatus.DONE]: tickets.filter((t) => t.status === TicketStatus.DONE),
+      [TaskState.TODO]: tasks.filter((t) => t.state === TaskState.TODO),
+      [TaskState.IN_PROGRESS]: tasks.filter((t) => t.state === TaskState.IN_PROGRESS),
+      [TaskState.DONE]: tasks.filter((t) => t.state === TaskState.DONE),
     };
-  }, [tickets]);
+  }, [tasks]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -139,8 +132,8 @@ export function KanbanBoard({
             title={column.title}
             color={column.color}
             headerColor={column.headerColor}
-            tickets={ticketsByStatus[column.status]}
-            onTicketClick={onTicketClick}
+            tasks={tasksByState[column.status]}
+            onTaskClick={onTaskClick}
             onDrop={onStatusChange}
           />
         ))}
