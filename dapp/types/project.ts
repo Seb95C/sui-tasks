@@ -1,27 +1,24 @@
 /**
- * Project Types
- * Represents projects on the blockchain and indexer
+ * Project types aligned with the jira_engine Move package.
  */
 
+import { Task } from './task';
 import { ProjectMember } from './user';
 
 export interface Project {
-  id: string; // Object ID from Sui blockchain
+  id: string;
   name: string;
   description: string;
-  objectId: string; // Sui object ID
-  creator: string; // Creator's Sui address
+  manager: string;
   createdAt: string;
   updatedAt: string;
-
-  // Aggregated data from indexer
-  membersCount?: number;
-  ticketsCount?: number;
-  members?: ProjectMember[];
+  managerCapId?: string;
+  members: ProjectMember[];
+  tasks: Task[];
 }
 
 export interface ProjectStats {
-  totalTickets: number;
+  totalTasks: number;
   todoCount: number;
   inProgressCount: number;
   doneCount: number;
@@ -31,10 +28,5 @@ export interface ProjectStats {
 export interface CreateProjectInput {
   name: string;
   description: string;
-}
-
-export interface UpdateProjectInput {
-  projectId: string;
-  name?: string;
-  description?: string;
+  displayName: string;
 }

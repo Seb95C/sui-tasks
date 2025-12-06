@@ -1,33 +1,21 @@
 /**
- * User and Member Types
- * Represents users and their membership in projects
+ * User and member types for the jira_engine UI layer.
  */
 
-export interface User {
-  id: string;
-  address: string; // Sui wallet address
+export interface UserProfile {
+  address: string;
   username?: string;
-  avatar?: string;
-  email?: string;
-  createdAt: string;
+}
+
+export interface UsernameRecord {
+  username: string;
+  userAddress: string;
 }
 
 export interface ProjectMember {
   id: string;
-  userId: string;
   projectId: string;
-  role: MemberRole;
-  user: User;
+  address: string;
+  displayName: string;
   joinedAt: string;
-}
-
-export enum MemberRole {
-  ADMIN = 'ADMIN',
-  MEMBER = 'MEMBER',
-}
-
-export interface InviteMemberInput {
-  projectId: string;
-  userAddress: string;
-  role: MemberRole;
 }
