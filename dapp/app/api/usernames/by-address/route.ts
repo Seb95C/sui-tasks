@@ -15,17 +15,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'address is required' }, { status: 400 });
   }
 
-  const pool = getIndexerPool();
+  const useMock = process.env.USE_INDEXER_MOCK === 'true';
   const addrLower = address.trim().toLowerCase();
 
-  const rows = await pool.query<DbUsername>(
-    `
-      SELECT username, user_address
-      FROM "UsernameRegistered"
-      WHERE LOWER(TRIM(user_address)) = $1
-    `,
-    [addrLower]
-  );
+  if (useMock) {
+    const { mockUsers } = await import('@/lib/mock/data');
+    const match = mockUsers
+      .filter((u: any) => u.address.toLowerCase() === addrLower)
+      .map((u: any) => ({ username: u.username || '', user_address: u.address }));
+    return NextResponse.json(match);
+  }
 
-  return NextResponse.json(rows.rows);
+  try {
+    const pool = getIndexerPool();
+
+    const rows = await pool.query<DbUsername>(
+      `
+        SELECT username, user_address
+        FROM "UsernameRegistered"
+        WHERE LOWER(TRIM(user_address)) = $1
+      `,
+      [addrLower],
+    );
+
+    return NextResponse.json(rows.rows);
+  } catch (err: any) {
+    console.error('Failed to fetch username', err);
+    return NextResponse.json({ error: 'Failed to fetch username' }, { status: 500 });
+  }
 }

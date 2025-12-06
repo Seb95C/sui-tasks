@@ -5,42 +5,18 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { ProjectMember, MemberRole } from '@/types/user';
-import { formatAddress } from '@/lib/utils/formatting';
+import React from 'react';
+import { ProjectMember } from '@/types/project';
+import { formatAddress, formatDate } from '@/lib/utils/formatting';
 import { Button } from '@/components/ui/Button';
 
 interface MembersListProps {
   members: ProjectMember[];
+  managerAddress?: string;
   canAddMembers: boolean;
   onAddMember?: () => void;
   currentUserAddress?: string;
 }
-
-export function MembersList({ members, canAddMembers, onAddMember, currentUserAddress }: MembersListProps) {
-  const [showCapabilities, setShowCapabilities] = useState<string | null>(null);
-
-  const getRoleBadgeColor = (role: MemberRole) => {
-    switch (role) {
-      case MemberRole.ADMIN:
-        return 'bg-purple-100 text-purple-700 border-purple-200';
-      case MemberRole.MEMBER:
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getRoleIcon = (role: MemberRole) => {
-    switch (role) {
-      case MemberRole.ADMIN:
-        return '👑';
-      case MemberRole.MEMBER:
-        return '👤';
-      default:
-        return '👤';
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -62,9 +38,12 @@ export function MembersList({ members, canAddMembers, onAddMember, currentUserAd
           </div>
         ) : (
           members.map((member) => {
-            const isCurrentUser = currentUserAddress && member.user.address === currentUserAddress;
-            const { getRoleCapabilities } = require('@/lib/utils/permissions');
-            const capabilities = getRoleCapabilities(member.role);
+            const isCurrentUser =
+              currentUserAddress &&
+              member.address.toLowerCase() === currentUserAddress.toLowerCase();
+            const isManager =
+              managerAddress &&
+              managerAddress.toLowerCase() === member.address.toLowerCase();
 
             return (
               <div
@@ -78,7 +57,7 @@ export function MembersList({ members, canAddMembers, onAddMember, currentUserAd
                     {/* Avatar placeholder */}
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center relative">
                       <span className="text-primary-700 font-medium text-sm">
-                        {member.user.username?.[0]?.toUpperCase() || '?'}
+                        {member.displayName?.[0]?.toUpperCase() || '?'}
                       </span>
                       {isCurrentUser && (
                         <div className="absolute -top-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white" />
@@ -89,50 +68,30 @@ export function MembersList({ members, canAddMembers, onAddMember, currentUserAd
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">
-                          {member.user.username || formatAddress(member.user.address)}
+                          {member.displayName || formatAddress(member.address)}
                         </p>
                         {isCurrentUser && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                             You
                           </span>
                         )}
+                        {isManager && (
+                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                            Manager
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 font-mono">
-                        {formatAddress(member.user.address)}
+                        {formatAddress(member.address)}
                       </p>
+                      {member.joinedAt && (
+                        <p className="text-xs text-gray-400">
+                          Joined {formatDate(member.joinedAt)}
+                        </p>
+                      )}
                     </div>
                   </div>
-
-                  {/* Role badge with capabilities */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowCapabilities(showCapabilities === member.id ? null : member.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1 hover:shadow-md transition-shadow ${getRoleBadgeColor(
-                        member.role
-                      )}`}
-                    >
-                      <span>{getRoleIcon(member.role)}</span>
-                      <span>{member.role}</span>
-                      <span className="text-xs opacity-60">ⓘ</span>
-                    </button>
-                  </div>
                 </div>
-
-                {/* Capabilities dropdown */}
-                {showCapabilities === member.id && (
-                  <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm animate-fade-in">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">
-                      {member.role} Capabilities:
-                    </p>
-                    <ul className="text-xs text-gray-600 space-y-1">
-                      {capabilities.map((cap: string, idx: number) => (
-                        <li key={idx} className={cap.startsWith('✗') ? 'text-gray-400' : ''}>
-                          {cap}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             );
           })
