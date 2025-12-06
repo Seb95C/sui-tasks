@@ -240,3 +240,37 @@ npm run indexer
 ```
 
 All working? Great! Push to git and share with your team! 🚀
+
+---
+
+## Deploy to Production
+
+Want a public URL? Deploy to Railway in 10 minutes:
+
+**Quick Deploy:**
+1. Push to GitHub
+2. Go to [railway.app](https://railway.app)
+3. Create project → Add PostgreSQL
+4. Deploy from GitHub repo
+5. Add environment variables
+6. Generate public URL
+
+**Detailed Guide:** See [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md)
+
+Your API will be available at: `https://your-app.railway.app`
+
+---
+
+## What You Get After Deployment
+
+✅ **Public API** - `https://your-app.railway.app`
+✅ **PostgreSQL Database** - Managed by Railway
+✅ **Auto-scaling** - Handles traffic automatically
+✅ **Free tier** - $5/month credit
+✅ **Auto-deploy** - Push to GitHub = automatic deploy
+
+Access from anywhere:
+```bash
+curl https://your-app.railway.app/api/projects
+curl https://your-app.railway.app/api/stats
+```
