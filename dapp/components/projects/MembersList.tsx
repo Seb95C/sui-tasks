@@ -1,26 +1,32 @@
 /**
  * Members List Component
- * Displays project members with their roles
+ * Displays project members with manager/current user indicators.
  */
 
 'use client';
 
 import React from 'react';
-import { ProjectMember } from '@/types/project';
+import { ProjectMember } from '@/types/user';
 import { formatAddress, formatDate } from '@/lib/utils/formatting';
 import { Button } from '@/components/ui/Button';
 
 interface MembersListProps {
   members: ProjectMember[];
   managerAddress?: string;
-  canAddMembers: boolean;
-  onAddMember?: () => void;
   currentUserAddress?: string;
+  canAddMembers?: boolean;
+  onAddMember?: () => void;
 }
 
+export function MembersList({
+  members,
+  managerAddress,
+  currentUserAddress,
+  canAddMembers,
+  onAddMember,
+}: MembersListProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Header */}
       <div className="p-6 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
         {canAddMembers && onAddMember && (
@@ -30,12 +36,9 @@ interface MembersListProps {
         )}
       </div>
 
-      {/* Members list */}
       <div className="divide-y divide-gray-200">
         {members.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            No members found
-          </div>
+          <div className="p-6 text-center text-gray-500">No members yet</div>
         ) : (
           members.map((member) => {
             const isCurrentUser =
@@ -54,7 +57,6 @@ interface MembersListProps {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    {/* Avatar placeholder */}
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center relative">
                       <span className="text-primary-700 font-medium text-sm">
                         {member.displayName?.[0]?.toUpperCase() || '?'}
@@ -64,7 +66,6 @@ interface MembersListProps {
                       )}
                     </div>
 
-                    {/* Member info */}
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">

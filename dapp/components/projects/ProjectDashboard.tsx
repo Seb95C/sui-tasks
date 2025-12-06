@@ -19,7 +19,7 @@ interface ProjectDashboardProps {
   canAddMembers: boolean;
   currentUserAddress?: string;
   onAddMember: () => void;
-  onCreateTicket: () => void;
+  onCreateTask: () => void;
 }
 
 export function ProjectDashboard({
@@ -29,7 +29,7 @@ export function ProjectDashboard({
   canAddMembers,
   currentUserAddress,
   onAddMember,
-  onCreateTicket,
+  onCreateTask,
 }: ProjectDashboardProps) {
   return (
     <div className="space-y-6">
@@ -111,6 +111,7 @@ export function ProjectDashboard({
       {/* Members section */}
       <MembersList
         members={members}
+        managerAddress={project.manager}
         canAddMembers={canAddMembers}
         currentUserAddress={currentUserAddress}
         onAddMember={onAddMember}
@@ -120,8 +121,8 @@ export function ProjectDashboard({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="flex space-x-3">
-          <Button onClick={onCreateTicket}>
-            Create Ticket
+          <Button onClick={onCreateTask}>
+            Create Task
           </Button>
           <Link href={`/projects/${project.id}/board`}>
             <Button variant="secondary">

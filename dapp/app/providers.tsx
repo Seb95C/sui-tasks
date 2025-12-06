@@ -11,6 +11,7 @@ import { SuiClientProvider, WalletProvider as DappKitWalletProvider } from '@mys
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { WalletProvider } from '@/contexts/WalletContext';
+import { ProjectProvider } from '@/contexts/ProjectContext';
 import { Header } from '@/components/layout/Header';
 
 // Create a client
@@ -29,13 +30,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <SuiClientProvider networks={networks} defaultNetwork={network}>
         <DappKitWalletProvider>
           <WalletProvider>
-            {/* Global Header */}
-            <Header />
+            <ProjectProvider>
+              {/* Global Header */}
+              <Header />
 
-            {/* Main Content */}
-            <main className="min-h-screen">
-              {children}
-            </main>
+              {/* Main Content */}
+              <main className="min-h-screen">
+                {children}
+              </main>
+            </ProjectProvider>
           </WalletProvider>
         </DappKitWalletProvider>
       </SuiClientProvider>
