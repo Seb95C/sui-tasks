@@ -1,259 +1,232 @@
 /**
- * Ticket Detail Modal
- * View and edit ticket details
+ * Task Detail Modal
+ * Shows a task with subtasks and attachments plus inline actions.
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
+import { Task, TaskState } from '@/types/task';
 import { ProjectMember } from '@/types/user';
-import { useWallet } from '@/contexts/WalletContext';
-import { useTickets } from '@/contexts/TicketContext';
-import { canEditTicket } from '@/lib/utils/permissions';
-import { formatDateTime, formatAddress, formatEnumLabel } from '@/lib/utils/formatting';
+import { formatAddress, formatDate } from '@/lib/utils/formatting';
 
-interface TicketDetailModalProps {
+interface TaskDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  ticket: Ticket;
+  task: Task;
   projectMembers: ProjectMember[];
+  onUpdateState?: (state: TaskState) => Promise<void>;
+  onUpdateDetails?: (updates: Partial<Task>) => Promise<void>;
+  onAddSubtask?: (payload: { name: string; description: string; state: TaskState }) => Promise<void>;
+  onAddAttachment?: (payload: { name: string; url: string }) => Promise<void>;
 }
 
 export function TicketDetailModal({
   isOpen,
   onClose,
-  ticket,
+  task,
   projectMembers,
-}: TicketDetailModalProps) {
-  const { currentAccount } = useWallet();
-  const { updateTicket } = useTickets();
+  onUpdateState,
+  onUpdateDetails,
+  onAddSubtask,
+  onAddAttachment,
+}: TaskDetailModalProps) {
+  const [status, setStatus] = useState<TaskState>(task.state as TaskState);
+  const [note, setNote] = useState(task.description);
+  const [subtaskName, setSubtaskName] = useState('');
+  const [subtaskDesc, setSubtaskDesc] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
+  const [attachmentUrl, setAttachmentUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Form state
-  const [title, setTitle] = useState(ticket.title);
-  const [description, setDescription] = useState(ticket.description);
-  const [status, setStatus] = useState(ticket.status);
-  const [priority, setPriority] = useState(ticket.priority);
-  const [assigneeId, setAssigneeId] = useState(ticket.assigneeId || '');
-
-  // Update form when ticket changes
-  useEffect(() => {
-    setTitle(ticket.title);
-    setDescription(ticket.description);
-    setStatus(ticket.status);
-    setPriority(ticket.priority);
-    setAssigneeId(ticket.assigneeId || '');
-  }, [ticket]);
-
-  const userCanEdit = currentAccount
-    ? canEditTicket(ticket, currentAccount.address, projectMembers)
-    : false;
-
-  const handleSave = async () => {
-    setLoading(true);
-
+  const handleStateUpdate = async () => {
+    if (!onUpdateState) return;
+    setSaving(true);
     try {
-      await updateTicket({
-        ticketId: ticket.id,
-        title: title.trim(),
-        description: description.trim(),
-        status,
-        priority,
-        assigneeId: assigneeId || undefined,
-      });
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update ticket:', error);
+      await onUpdateState(status);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    // Reset form to original values
-    setTitle(ticket.title);
-    setDescription(ticket.description);
-    setStatus(ticket.status);
-    setPriority(ticket.priority);
-    setAssigneeId(ticket.assigneeId || '');
-    setIsEditing(false);
+  const handleSaveDetails = async () => {
+    if (!onUpdateDetails) return;
+    setSaving(true);
+    try {
+      await onUpdateDetails({ description: note });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const statusOptions = Object.values(TicketStatus).map((s) => ({
-    value: s,
-    label: formatEnumLabel(s),
-  }));
+  const handleAddSubtask = async () => {
+    if (!onAddSubtask || !subtaskName.trim()) return;
+    setSaving(true);
+    try {
+      await onAddSubtask({
+        name: subtaskName.trim(),
+        description: subtaskDesc.trim(),
+        state: TaskState.TODO,
+      });
+      setSubtaskName('');
+      setSubtaskDesc('');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const priorityOptions = Object.values(TicketPriority).map((p) => ({
-    value: p,
-    label: formatEnumLabel(p),
-  }));
+  const handleAddAttachment = async () => {
+    if (!onAddAttachment || !attachmentName.trim() || !attachmentUrl.trim()) return;
+    setSaving(true);
+    try {
+      await onAddAttachment({
+        name: attachmentName.trim(),
+        url: attachmentUrl.trim(),
+      });
+      setAttachmentName('');
+      setAttachmentUrl('');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const assigneeOptions = [
-    { value: '', label: 'Unassigned' },
-    ...projectMembers.map((m) => ({
-      value: m.userId,
-      label: m.user.username || formatAddress(m.user.address),
-    })),
-  ];
+  const assigneeLabel =
+    projectMembers.find((m) => m.address.toLowerCase() === task.assignee.toLowerCase())
+      ?.displayName || formatAddress(task.assignee);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Ticket Details" size="lg">
-      <div className="space-y-6">
-        {/* Header with edit button */}
-        {!isEditing && userCanEdit && (
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => setIsEditing(true)}>
-              Edit Ticket
-            </Button>
+    <Modal isOpen={isOpen} onClose={onClose} title={task.name} size="xl">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Assignee</p>
+            <p className="text-base text-gray-900 font-medium">{assigneeLabel}</p>
           </div>
-        )}
-
-        {/* Ticket ID */}
-        <div>
-          <p className="text-sm text-gray-500">Ticket ID</p>
-          <p className="font-mono text-sm text-gray-700">{ticket.id}</p>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Updated</p>
+            <p className="text-base text-gray-900 font-medium">
+              {formatDate(task.updatedAt)}
+            </p>
+          </div>
         </div>
 
-        {/* Title */}
-        {isEditing ? (
-          <Input
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={loading}
-          />
-        ) : (
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Title</p>
-            <h3 className="text-xl font-semibold text-gray-900">{ticket.title}</h3>
-          </div>
-        )}
+        <Textarea
+          label="Description"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={3}
+        />
 
-        {/* Description */}
-        {isEditing ? (
-          <Textarea
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            disabled={loading}
-          />
-        ) : (
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Description</p>
-            <p className="text-gray-700 whitespace-pre-wrap">{ticket.description}</p>
-          </div>
-        )}
-
-        {/* Status and Priority */}
-        <div className="grid grid-cols-2 gap-4">
-          {isEditing ? (
-            <>
-              <Select
-                label="Status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as TicketStatus)}
-                options={statusOptions}
-                disabled={loading}
-              />
-              <Select
-                label="Priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                options={priorityOptions}
-                disabled={loading}
-              />
-            </>
-          ) : (
-            <>
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Status</p>
-                <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
-                  {formatEnumLabel(ticket.status)}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Priority</p>
-                <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
-                  {formatEnumLabel(ticket.priority)}
-                </span>
-              </div>
-            </>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Status</label>
+          <select
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            value={status}
+            onChange={(e) => setStatus(Number(e.target.value))}
+          >
+            <option value={TaskState.TODO}>To Do</option>
+            <option value={TaskState.IN_PROGRESS}>In Progress</option>
+            <option value={TaskState.DONE}>Done</option>
+          </select>
+          {onUpdateState && (
+            <Button size="sm" onClick={handleStateUpdate} loading={saving}>
+              Update
+            </Button>
+          )}
+          {onUpdateDetails && (
+            <Button size="sm" variant="secondary" onClick={handleSaveDetails} loading={saving}>
+              Save Description
+            </Button>
           )}
         </div>
 
-        {/* Assignee */}
-        {isEditing ? (
-          <Select
-            label="Assignee"
-            value={assigneeId}
-            onChange={(e) => setAssigneeId(e.target.value)}
-            options={assigneeOptions}
-            disabled={loading}
-          />
-        ) : (
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Assignee</p>
-            {ticket.assignee ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span className="text-primary-700 font-medium text-sm">
-                    {ticket.assignee.username?.[0]?.toUpperCase() || '?'}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {ticket.assignee.username || formatAddress(ticket.assignee.address)}
-                  </p>
-                  <p className="text-xs text-gray-500 font-mono">
-                    {formatAddress(ticket.assignee.address)}
-                  </p>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-900">Subtasks</h3>
+              <span className="text-xs text-gray-500">{task.subtasks.length} total</span>
+            </div>
+            {task.subtasks.length === 0 ? (
+              <p className="text-sm text-gray-500">No subtasks yet.</p>
             ) : (
-              <p className="text-gray-500">Unassigned</p>
+              <ul className="space-y-2">
+                {task.subtasks.map((sub) => (
+                  <li key={sub.id} className="border rounded-md px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">{sub.name}</span>
+                      <span className="text-xs text-gray-500">
+                        {sub.state === TaskState.DONE ? 'Done' : 'Open'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{sub.description}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {onAddSubtask && (
+              <div className="mt-3 space-y-2">
+                <Input
+                  placeholder="Subtask title"
+                  value={subtaskName}
+                  onChange={(e) => setSubtaskName(e.target.value)}
+                />
+                <Input
+                  placeholder="Subtask description"
+                  value={subtaskDesc}
+                  onChange={(e) => setSubtaskDesc(e.target.value)}
+                />
+                <Button size="sm" onClick={handleAddSubtask} loading={saving}>
+                  Add subtask
+                </Button>
+              </div>
             )}
           </div>
-        )}
 
-        {/* Creator */}
-        <div>
-          <p className="text-sm text-gray-500 mb-1">Created by</p>
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <span className="text-gray-700 font-medium text-sm">
-                {ticket.creator.username?.[0]?.toUpperCase() || '?'}
-              </span>
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-900">Attachments</h3>
+              <span className="text-xs text-gray-500">{task.attachments.length} total</span>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {ticket.creator.username || formatAddress(ticket.creator.address)}
-              </p>
-              <p className="text-xs text-gray-500">{formatDateTime(ticket.createdAt)}</p>
-            </div>
+            {task.attachments.length === 0 ? (
+              <p className="text-sm text-gray-500">No attachments yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {task.attachments.map((att) => (
+                  <li key={att.id} className="border rounded-md px-3 py-2">
+                    <a
+                      href={att.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      {att.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {onAddAttachment && (
+              <div className="mt-3 space-y-2">
+                <Input
+                  placeholder="Attachment name"
+                  value={attachmentName}
+                  onChange={(e) => setAttachmentName(e.target.value)}
+                />
+                <Input
+                  placeholder="https://..."
+                  value={attachmentUrl}
+                  onChange={(e) => setAttachmentUrl(e.target.value)}
+                />
+                <Button size="sm" onClick={handleAddAttachment} loading={saving}>
+                  Add attachment
+                </Button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Action buttons */}
-        {isEditing && (
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <Button variant="secondary" onClick={handleCancel} disabled={loading}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} loading={loading}>
-              Save Changes
-            </Button>
-          </div>
-        )}
       </div>
     </Modal>
   );
